@@ -102,6 +102,12 @@ hr { border-color: #2b3a52; }
     border: 1px solid #2b3a52; border-radius: 12px; background: #16213550;
 }
 
+/* 버튼이 들어간 칼럼 행은 좁은 화면에서도 한 줄 유지 */
+[data-testid="stHorizontalBlock"]:has([data-testid="stButton"]) { flex-wrap: nowrap !important; }
+[data-testid="stHorizontalBlock"]:has([data-testid="stButton"]) > [data-testid="stColumn"] {
+    min-width: 0 !important; flex: 1 1 0 !important;
+}
+
 /* ── 상단 페이지 내비게이션 바 ── */
 [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink"]) {
     flex-wrap: nowrap !important; gap: 6px !important;
