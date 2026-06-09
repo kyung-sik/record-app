@@ -17,7 +17,7 @@ TOGGLE_ONLY = ["복근", "유산소"]                                           
 MAIN = "본운동"                                                              # 부위 선택
 BODY_PARTS = ["가슴", "등", "어깨", "하체"]
 ORDER = WEIGHT_EXERCISES + TOGGLE_ONLY + [MAIN]
-DEFAULT_WEIGHT = 20.0  # 과거 기록이 없을 때 중량 기본값
+DEFAULT_WEIGHT = 50.0  # 과거 기록이 없을 때 중량 기본값
 
 st.title("🏃 운동 기록")
 
@@ -26,7 +26,7 @@ if "flash" in st.session_state:
     st.success(st.session_state.pop("flash"))
 
 date = st.date_input("날짜", dt.date.today())
-st.caption("운동 종목을 눌러 선택하세요. 선택하면 하늘색으로 바뀝니다.")
+st.caption("7~8회 가능한 중량 * 4세트")
 
 # ---------- 종목 토글 + 중량/부위 ----------
 for name in ORDER:
