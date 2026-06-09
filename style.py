@@ -108,12 +108,12 @@ hr { border-color: #2b3a52; }
     min-width: 0 !important; flex: 1 1 0 !important;
 }
 
-/* ── 상단 페이지 내비게이션 바 ── */
+/* ── 상단 페이지 내비게이션 바 (좁으면 다음 줄로 줄바꿈) ── */
 [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink"]) {
-    flex-wrap: nowrap !important; gap: 6px !important;
+    flex-wrap: wrap !important; gap: 6px !important;
 }
 [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink"]) > [data-testid="stColumn"] {
-    min-width: 0 !important; flex: 1 1 0 !important;
+    min-width: 64px !important; flex: 1 1 64px !important;
 }
 [data-testid="stPageLink"] a {
     display: flex; justify-content: center; align-items: center;
