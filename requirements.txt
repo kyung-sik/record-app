@@ -2,3 +2,4 @@ streamlit>=1.58
 pandas>=2.0
 SQLAlchemy>=2.0
 psycopg2-binary>=2.9
+extra-streamlit-components>=0.1.71
