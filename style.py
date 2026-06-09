@@ -101,8 +101,40 @@ hr { border-color: #2b3a52; }
 [data-testid="stExpander"] {
     border: 1px solid #2b3a52; border-radius: 12px; background: #16213550;
 }
+
+/* ── 상단 페이지 내비게이션 바 ── */
+[data-testid="stHorizontalBlock"]:has([data-testid="stPageLink"]) {
+    flex-wrap: nowrap !important; gap: 6px !important;
+}
+[data-testid="stHorizontalBlock"]:has([data-testid="stPageLink"]) > [data-testid="stColumn"] {
+    min-width: 0 !important; flex: 1 1 0 !important;
+}
+[data-testid="stPageLink"] a {
+    display: flex; justify-content: center; align-items: center;
+    background: #1E293B; border: 1px solid #2b3a52; border-radius: 10px;
+    padding: 9px 2px; color: #cbd5e1 !important; font-weight: 600;
+    white-space: nowrap;
+}
+[data-testid="stPageLink"] a:hover { border-color: #38BDF8; color: #ffffff !important; }
+[data-testid="stPageLink"] a p { font-size: 0.9rem; }
 </style>
 """
+
+# 상단 내비게이션에 쓸 페이지 목록 (경로는 메인 앱 기준 상대경로)
+_NAV = [
+    ("app.py", "홈", "🏠"),
+    ("pages/1_운동기록.py", "운동", "🏃"),
+    ("pages/2_식단기록.py", "식단", "🍽️"),
+    ("pages/3_체중기록.py", "체중", "⚖️"),
+]
+
+
+def top_nav() -> None:
+    """화면 상단에 페이지 이동 버튼 바를 그린다(사이드바와 무관하게 항상 표시)."""
+    cols = st.columns(len(_NAV), gap="small")
+    for col, (path, label, icon) in zip(cols, _NAV):
+        with col:
+            st.page_link(path, label=label, icon=icon)
 
 
 def inject() -> None:

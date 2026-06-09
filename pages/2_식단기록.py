@@ -15,6 +15,7 @@ auth.require_login()
 data.ensure_db()
 
 style.hero("식단 기록 🍽️", "끼니별로 먹은 음식과 칼로리를 남겨보세요.")
+style.top_nav()
 
 # ---------- 입력 폼 ----------
 with st.form("diet_form", clear_on_submit=True):

@@ -39,6 +39,7 @@ ORDER = WEIGHT_EXERCISES + TOGGLE_ONLY + [MAIN]
 DEFAULT_WEIGHT = 50.0  # 과거 기록이 없을 때 중량 기본값
 
 style.hero("운동 기록 🏃", "오늘 한 종목을 눌러 선택하세요.")
+style.top_nav()
 
 # 저장 직후 안내 메시지(새로고침 후에도 보이도록 세션에 잠시 보관)
 if "flash" in st.session_state:

@@ -15,6 +15,7 @@ auth.require_login()
 data.ensure_db()
 
 style.hero("체중 기록 ⚖️", "몸무게를 기록하고 추이를 확인하세요.")
+style.top_nav()
 
 # ---------- 입력 폼 ----------
 with st.form("weight_form", clear_on_submit=True):

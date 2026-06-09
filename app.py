@@ -20,6 +20,7 @@ auth.require_login()
 data.ensure_db()
 
 style.hero("나의 건강 기록 💪", "매일의 운동·식단·체중을 기록하고 추이를 확인하세요.")
+style.top_nav()
 
 # 데이터 불러오기(캐시)
 ex_df = data.load_df("exercise")
