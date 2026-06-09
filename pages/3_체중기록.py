@@ -17,21 +17,30 @@ data.ensure_db()
 style.hero("체중 기록 ⚖️", "몸무게를 기록하고 추이를 확인하세요.")
 style.top_nav()
 
+# 저장 직후 안내 메시지(새로고침 후에도 보이도록)
+if "weight_flash" in st.session_state:
+    st.success(st.session_state.pop("weight_flash"))
+
+# 데이터 로드 + 마지막에 저장된 몸무게를 기본값으로
+df = data.load_df("weight")
+default_weight = float(df.iloc[0]["weight_kg"]) if not df.empty else 60.0
+
 # ---------- 입력 폼 ----------
 with st.form("weight_form", clear_on_submit=True):
     date = st.date_input("날짜", dt.date.today())
-    weight_kg = st.number_input("몸무게(kg)", min_value=0.0, max_value=300.0, value=60.0, step=0.1)
+    weight_kg = st.number_input("몸무게(kg)", min_value=0.0, max_value=300.0,
+                                value=default_weight, step=0.1)
     submitted = st.form_submit_button("저장")
 
     if submitted:
         db.add_weight(date.isoformat(), float(weight_kg), "")
         data.refresh()
-        st.success(f"저장 완료: {date} · {weight_kg} kg")
+        st.session_state["weight_flash"] = f"저장 완료: {date} · {weight_kg} kg"
+        st.rerun()
 
 st.divider()
 
 # ---------- 추이 그래프 ----------
-df = data.load_df("weight")
 if df.empty:
     st.info("아직 기록이 없습니다.")
 else:
