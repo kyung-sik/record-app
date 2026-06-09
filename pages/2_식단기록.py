@@ -4,11 +4,12 @@ import datetime as dt
 import streamlit as st
 
 import auth
+import data
 import db
 
 st.set_page_config(page_title="식단 기록", page_icon="🍽️")
 auth.require_login()
-db.init_db()
+data.ensure_db()
 
 st.title("🍽️ 식단 기록")
 
@@ -26,13 +27,14 @@ with st.form("diet_form", clear_on_submit=True):
             st.error("음식 내용을 입력해 주세요.")
         else:
             db.add_diet(date.isoformat(), meal, food.strip(), int(calories), memo.strip())
+            data.refresh()
             st.success(f"저장 완료: {date} · {meal} · {food}")
 
 st.divider()
 
 # ---------- 기록 조회 ----------
 st.subheader("전체 식단 기록")
-df = db.get_df("diet")
+df = data.load_df("diet")
 if df.empty:
     st.info("아직 기록이 없습니다.")
 else:
@@ -42,5 +44,6 @@ else:
         del_id = st.number_input("삭제할 기록의 id", min_value=0, step=1, value=0)
         if st.button("삭제", type="primary"):
             db.delete_row("diet", int(del_id))
+            data.refresh()
             st.success(f"id {del_id} 기록을 삭제했습니다.")
             st.rerun()

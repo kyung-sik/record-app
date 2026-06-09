@@ -5,11 +5,27 @@ import pandas as pd
 import streamlit as st
 
 import auth
+import data
 import db
 
 st.set_page_config(page_title="운동 기록", page_icon="🏃")
 auth.require_login()
-db.init_db()
+data.ensure_db()
+
+# 모바일에서도 '종목 버튼'과 '중량칸'을 같은 줄에 유지(좁은 화면 자동 줄바꿈 방지)
+st.markdown(
+    """
+    <style>
+    [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; }
+    [data-testid="stHorizontalBlock"] > [data-testid="stColumn"],
+    [data-testid="stHorizontalBlock"] > [data-testid="column"] {
+        min-width: 0 !important;
+        flex: 1 1 0 !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # ---------- 종목 구성 ----------
 WEIGHT_EXERCISES = ["풀업", "데드리프트", "벤치프레스", "오버헤드프레스", "팔"]  # 중량 입력 있음
@@ -80,6 +96,7 @@ if st.button("💾 저장", type="primary", use_container_width=True):
             st.session_state.pop(f"sel_{n}", None)
             st.session_state.pop(f"w_{n}", None)
         st.session_state.pop("part_main", None)
+        data.refresh()
         st.session_state["flash"] = f"저장 완료: {', '.join(chosen)}"
         st.rerun()
 
@@ -87,7 +104,7 @@ st.divider()
 
 # ---------- 최근 기록 + 삭제 ----------
 st.subheader("최근 운동 기록")
-df = db.get_df("exercise")
+df = data.load_df("exercise")
 if df.empty:
     st.info("아직 기록이 없습니다.")
 else:
@@ -110,4 +127,5 @@ else:
         pick = st.selectbox("삭제할 기록 선택", list(options.keys()))
         if st.button("삭제", type="secondary"):
             db.delete_row("exercise", int(options[pick]))
+            data.refresh()
             st.rerun()

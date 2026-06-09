@@ -4,11 +4,12 @@ import datetime as dt
 import streamlit as st
 
 import auth
+import data
 import db
 
 st.set_page_config(page_title="체중 기록", page_icon="⚖️")
 auth.require_login()
-db.init_db()
+data.ensure_db()
 
 st.title("⚖️ 체중 기록")
 
@@ -21,12 +22,13 @@ with st.form("weight_form", clear_on_submit=True):
 
     if submitted:
         db.add_weight(date.isoformat(), float(weight_kg), memo.strip())
+        data.refresh()
         st.success(f"저장 완료: {date} · {weight_kg} kg")
 
 st.divider()
 
 # ---------- 추이 그래프 ----------
-df = db.get_df("weight")
+df = data.load_df("weight")
 if df.empty:
     st.info("아직 기록이 없습니다.")
 else:
@@ -41,5 +43,6 @@ else:
         del_id = st.number_input("삭제할 기록의 id", min_value=0, step=1, value=0)
         if st.button("삭제", type="primary"):
             db.delete_row("weight", int(del_id))
+            data.refresh()
             st.success(f"id {del_id} 기록을 삭제했습니다.")
             st.rerun()

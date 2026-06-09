@@ -8,21 +8,21 @@ import datetime as dt
 import streamlit as st
 
 import auth
-import db
+import data
 
 st.set_page_config(page_title="나의 건강 기록", page_icon="💪", layout="wide")
 
-# 로그인 확인 후, DB 테이블을 준비한다.
+# 로그인 확인 후, DB 테이블을 준비한다(프로세스당 1회 캐싱).
 auth.require_login()
-db.init_db()
+data.ensure_db()
 
 st.title("💪 나의 건강 기록")
 st.caption("매일의 운동·식단·체중을 기록하고 추이를 확인하세요. 왼쪽 사이드바에서 기록 페이지로 이동합니다.")
 
-# 데이터 불러오기
-ex_df = db.get_df("exercise")
-diet_df = db.get_df("diet")
-wt_df = db.get_df("weight")
+# 데이터 불러오기(캐시)
+ex_df = data.load_df("exercise")
+diet_df = data.load_df("diet")
+wt_df = data.load_df("weight")
 
 today = dt.date.today().isoformat()
 
