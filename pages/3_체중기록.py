@@ -6,12 +6,14 @@ import streamlit as st
 import auth
 import data
 import db
+import style
 
 st.set_page_config(page_title="체중 기록", page_icon="⚖️")
+style.inject()
 auth.require_login()
 data.ensure_db()
 
-st.title("⚖️ 체중 기록")
+style.hero("체중 기록 ⚖️", "몸무게를 기록하고 추이를 확인하세요.")
 
 # ---------- 입력 폼 ----------
 with st.form("weight_form", clear_on_submit=True):

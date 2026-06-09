@@ -6,12 +6,14 @@ import streamlit as st
 import auth
 import data
 import db
+import style
 
 st.set_page_config(page_title="식단 기록", page_icon="🍽️")
+style.inject()
 auth.require_login()
 data.ensure_db()
 
-st.title("🍽️ 식단 기록")
+style.hero("식단 기록 🍽️", "끼니별로 먹은 음식과 칼로리를 남겨보세요.")
 
 # ---------- 입력 폼 ----------
 with st.form("diet_form", clear_on_submit=True):

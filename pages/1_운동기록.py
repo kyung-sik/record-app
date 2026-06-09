@@ -7,8 +7,10 @@ import streamlit as st
 import auth
 import data
 import db
+import style
 
 st.set_page_config(page_title="운동 기록", page_icon="🏃")
+style.inject()
 auth.require_login()
 data.ensure_db()
 
@@ -35,7 +37,7 @@ BODY_PARTS = ["가슴", "등", "어깨", "하체"]
 ORDER = WEIGHT_EXERCISES + TOGGLE_ONLY + [MAIN]
 DEFAULT_WEIGHT = 50.0  # 과거 기록이 없을 때 중량 기본값
 
-st.title("🏃 운동 기록")
+style.hero("운동 기록 🏃", "오늘 한 종목을 눌러 선택하세요.")
 
 # 저장 직후 안내 메시지(새로고침 후에도 보이도록 세션에 잠시 보관)
 if "flash" in st.session_state:

@@ -1,3 +1,8 @@
-# 앱 테마 — 선택된 버튼 등에 쓰이는 강조색을 하늘색으로 지정
+# 앱 테마 — 다크 모던(피트니스)
 [theme]
-primaryColor = "#38BDF8"
+base = "dark"
+primaryColor = "#38BDF8"            # 포인트: 하늘색
+backgroundColor = "#0F172A"          # 배경: 딥네이비
+secondaryBackgroundColor = "#1E293B" # 카드/입력 배경
+textColor = "#E2E8F0"                # 본문 글자
+font = "sans serif"
