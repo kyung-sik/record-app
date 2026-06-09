@@ -21,11 +21,10 @@ style.top_nav()
 with st.form("weight_form", clear_on_submit=True):
     date = st.date_input("날짜", dt.date.today())
     weight_kg = st.number_input("몸무게(kg)", min_value=0.0, max_value=300.0, value=60.0, step=0.1)
-    memo = st.text_area("메모", placeholder="공복/식후 등")
     submitted = st.form_submit_button("저장")
 
     if submitted:
-        db.add_weight(date.isoformat(), float(weight_kg), memo.strip())
+        db.add_weight(date.isoformat(), float(weight_kg), "")
         data.refresh()
         st.success(f"저장 완료: {date} · {weight_kg} kg")
 
@@ -41,7 +40,8 @@ else:
     st.line_chart(chart_df, y="weight_kg")
 
     st.subheader("전체 체중 기록")
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    show = df[["date", "weight_kg"]].rename(columns={"date": "날짜", "weight_kg": "몸무게(kg)"})
+    st.dataframe(show, use_container_width=True, hide_index=True)
 
     with st.expander("기록 삭제"):
         del_id = st.number_input("삭제할 기록의 id", min_value=0, step=1, value=0)
