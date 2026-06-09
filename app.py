@@ -11,7 +11,8 @@ import auth
 import data
 import style
 
-st.set_page_config(page_title="나의 건강 기록", page_icon="💪", layout="centered")
+st.set_page_config(page_title="나의 건강 기록", page_icon="💪", layout="centered",
+                   initial_sidebar_state="expanded")
 style.inject()
 
 # 로그인 확인 후, DB 테이블을 준비한다(프로세스당 1회 캐싱).

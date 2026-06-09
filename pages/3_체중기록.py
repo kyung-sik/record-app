@@ -8,7 +8,8 @@ import data
 import db
 import style
 
-st.set_page_config(page_title="체중 기록", page_icon="⚖️")
+st.set_page_config(page_title="체중 기록", page_icon="⚖️",
+                   initial_sidebar_state="expanded")
 style.inject()
 auth.require_login()
 data.ensure_db()

@@ -23,8 +23,16 @@ button, input, textarea, select, [data-baseweb] {
 /* 본문 폭을 모바일/데스크톱 모두 보기 좋게 가운데로 */
 .block-container { padding-top: 2.2rem; padding-bottom: 4rem; max-width: 720px; }
 
-/* 군더더기 정리(상단 툴바/메뉴/푸터 숨김) */
-[data-testid="stToolbar"], #MainMenu, footer { visibility: hidden; height: 0; }
+/* 군더더기 정리(우상단 메뉴/푸터만 숨김 — 사이드바는 건드리지 않는다) */
+#MainMenu, footer { visibility: hidden; height: 0; }
+
+/* 사이드바 펼침 버튼이 어두운 배경에 묻히지 않도록 또렷하게 */
+[data-testid="stSidebarCollapsedControl"] svg,
+[data-testid="collapsedControl"] svg { color: #38BDF8 !important; fill: #38BDF8 !important; }
+
+/* 사이드바(페이지 메뉴) 배경/글자 */
+[data-testid="stSidebar"] { background: #0c1322; border-right: 1px solid #1e293b; }
+[data-testid="stSidebarNav"] a span { color: #cbd5e1 !important; }
 
 /* ── 제목 ── */
 h1, h2, h3 { color: #F1F5F9; letter-spacing: -0.02em; font-weight: 700; }
