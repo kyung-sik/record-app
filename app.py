@@ -34,12 +34,14 @@ st.subheader("오늘 요약")
 c1, c2, c3 = st.columns(3)
 
 today_ex = ex_df[ex_df["date"] == today]
+ex_names = list(dict.fromkeys(today_ex["name"].tolist()))  # 중복 제거, 순서 유지
 c1.metric("오늘 운동", f"{len(today_ex)} 종목",
-          ", ".join(today_ex["name"].tolist()) if not today_ex.empty else None)
+          ", ".join(ex_names) if ex_names else None)
 
 today_diet = diet_df[diet_df["date"] == today]
-today_cal = int(today_diet["calories"].fillna(0).sum()) if not today_diet.empty else 0
-c2.metric("오늘 섭취 칼로리", f"{today_cal} kcal", f"{len(today_diet)} 건")
+diet_meals = list(dict.fromkeys(today_diet["meal"].tolist()))
+c2.metric("오늘 식단", f"{len(today_diet)} 개",
+          ", ".join(diet_meals) if diet_meals else None)
 
 if not wt_df.empty:
     latest = wt_df.iloc[0]
@@ -56,7 +58,7 @@ st.divider()
 # ---------- 체중 추이 ----------
 st.subheader("체중 추이")
 if wt_df.empty:
-    st.info("아직 체중 기록이 없습니다. 왼쪽 사이드바의 '체중기록'에서 추가해 보세요.")
+    st.info("아직 체중 기록이 없습니다. 상단 메뉴의 '체중'에서 추가해 보세요.")
 else:
     chart_df = wt_df.sort_values("date").set_index("date")[["weight_kg"]]
     st.line_chart(chart_df, y="weight_kg")
@@ -67,11 +69,23 @@ st.divider()
 st.subheader("최근 기록")
 t1, t2, t3 = st.tabs(["🏃 운동", "🍽️ 식단", "⚖️ 체중"])
 with t1:
-    ex_show = ex_df[["date", "name", "weight", "detail"]].rename(
-        columns={"date": "날짜", "name": "운동", "weight": "중량(kg)", "detail": "부위"}
-    ) if not ex_df.empty else ex_df
-    st.dataframe(ex_show.head(10), use_container_width=True, hide_index=True)
+    if ex_df.empty:
+        st.info("운동 기록이 없습니다.")
+    else:
+        ex_show = ex_df[["date", "name", "weight", "detail"]].rename(
+            columns={"date": "날짜", "name": "운동", "weight": "중량(kg)", "detail": "부위"})
+        st.dataframe(ex_show.head(10), use_container_width=True, hide_index=True)
 with t2:
-    st.dataframe(diet_df.head(10), use_container_width=True, hide_index=True)
+    if diet_df.empty:
+        st.info("식단 기록이 없습니다.")
+    else:
+        diet_show = diet_df[["date", "meal", "food"]].rename(
+            columns={"date": "날짜", "meal": "끼니", "food": "음식"})
+        st.dataframe(diet_show.head(10), use_container_width=True, hide_index=True)
 with t3:
-    st.dataframe(wt_df.head(10), use_container_width=True, hide_index=True)
+    if wt_df.empty:
+        st.info("체중 기록이 없습니다.")
+    else:
+        wt_show = wt_df[["date", "weight_kg"]].rename(
+            columns={"date": "날짜", "weight_kg": "몸무게(kg)"})
+        st.dataframe(wt_show.head(10), use_container_width=True, hide_index=True)
