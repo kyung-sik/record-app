@@ -1,6 +1,7 @@
-"""운동 기록 페이지 — 입력 폼과 전체 기록 조회/삭제."""
+"""운동 기록 페이지 — 종목을 탭으로 선택하고 중량과 함께 한 번에 저장."""
 import datetime as dt
 
+import pandas as pd
 import streamlit as st
 
 import auth
@@ -10,39 +11,103 @@ st.set_page_config(page_title="운동 기록", page_icon="🏃")
 auth.require_login()
 db.init_db()
 
+# ---------- 종목 구성 ----------
+WEIGHT_EXERCISES = ["풀업", "데드리프트", "벤치프레스", "오버헤드프레스", "팔"]  # 중량 입력 있음
+TOGGLE_ONLY = ["복근", "유산소"]                                              # 했다/안했다만
+MAIN = "본운동"                                                              # 부위 선택
+BODY_PARTS = ["가슴", "등", "어깨", "하체"]
+ORDER = WEIGHT_EXERCISES + TOGGLE_ONLY + [MAIN]
+DEFAULT_WEIGHT = 20.0  # 과거 기록이 없을 때 중량 기본값
+
 st.title("🏃 운동 기록")
 
-# ---------- 입력 폼 ----------
-with st.form("exercise_form", clear_on_submit=True):
-    date = st.date_input("날짜", dt.date.today())
-    name = st.text_input("운동 종류", placeholder="예: 달리기, 헬스, 수영")
-    col1, col2 = st.columns(2)
-    minutes = col1.number_input("운동 시간(분)", min_value=0, max_value=600, value=30, step=5)
-    sets = col2.number_input("세트 수", min_value=0, max_value=100, value=0, step=1)
-    memo = st.text_area("메모", placeholder="강도, 컨디션 등 자유롭게")
-    submitted = st.form_submit_button("저장")
+# 저장 직후 안내 메시지(새로고침 후에도 보이도록 세션에 잠시 보관)
+if "flash" in st.session_state:
+    st.success(st.session_state.pop("flash"))
 
-    if submitted:
-        if not name.strip():
-            st.error("운동 종류를 입력해 주세요.")
-        else:
-            db.add_exercise(date.isoformat(), name.strip(), int(minutes), int(sets), memo.strip())
-            st.success(f"저장 완료: {date} · {name}")
+date = st.date_input("날짜", dt.date.today())
+st.caption("운동 종목을 눌러 선택하세요. 선택하면 하늘색으로 바뀝니다.")
+
+# ---------- 종목 토글 + 중량/부위 ----------
+for name in ORDER:
+    sel_key = f"sel_{name}"
+    selected = st.session_state.get(sel_key, False)
+
+    left, right = st.columns([1, 1.2], vertical_alignment="center")
+    with left:
+        if st.button(
+            name,
+            key=f"btn_{name}",
+            type="primary" if selected else "secondary",
+            use_container_width=True,
+        ):
+            selected = not selected
+            st.session_state[sel_key] = selected
+            # 중량 종목을 새로 켤 때 마지막 중량을 기본값으로 채운다.
+            if selected and name in WEIGHT_EXERCISES and f"w_{name}" not in st.session_state:
+                last = db.get_last_weight(name)
+                st.session_state[f"w_{name}"] = last if last is not None else DEFAULT_WEIGHT
+            st.rerun()
+
+    with right:
+        if selected and name in WEIGHT_EXERCISES:
+            st.number_input(
+                "중량(kg)", min_value=0.0, max_value=500.0, step=5.0,
+                key=f"w_{name}", label_visibility="collapsed",
+            )
+        elif selected and name == MAIN:
+            st.selectbox(
+                "부위", BODY_PARTS, key="part_main", label_visibility="collapsed",
+            )
+
+st.write("")
+
+# ---------- 저장 ----------
+if st.button("💾 저장", type="primary", use_container_width=True):
+    chosen = [n for n in ORDER if st.session_state.get(f"sel_{n}")]
+    if not chosen:
+        st.warning("선택된 운동이 없습니다.")
+    else:
+        for n in chosen:
+            if n in WEIGHT_EXERCISES:
+                db.add_exercise(date.isoformat(), n, weight=float(st.session_state.get(f"w_{n}", 0)))
+            elif n == MAIN:
+                db.add_exercise(date.isoformat(), n, detail=st.session_state.get("part_main"))
+            else:  # 복근, 유산소
+                db.add_exercise(date.isoformat(), n)
+        # 선택/중량/부위 상태 초기화
+        for n in ORDER:
+            st.session_state.pop(f"sel_{n}", None)
+            st.session_state.pop(f"w_{n}", None)
+        st.session_state.pop("part_main", None)
+        st.session_state["flash"] = f"저장 완료: {', '.join(chosen)}"
+        st.rerun()
 
 st.divider()
 
-# ---------- 기록 조회 ----------
-st.subheader("전체 운동 기록")
+# ---------- 최근 기록 + 삭제 ----------
+st.subheader("최근 운동 기록")
 df = db.get_df("exercise")
 if df.empty:
     st.info("아직 기록이 없습니다.")
 else:
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    show = df[["date", "name", "weight", "detail"]].rename(
+        columns={"date": "날짜", "name": "운동", "weight": "중량(kg)", "detail": "부위"}
+    )
+    st.dataframe(show.head(30), use_container_width=True, hide_index=True)
 
-    # 기록 삭제
     with st.expander("기록 삭제"):
-        del_id = st.number_input("삭제할 기록의 id", min_value=0, step=1, value=0)
-        if st.button("삭제", type="primary"):
-            db.delete_row("exercise", int(del_id))
-            st.success(f"id {del_id} 기록을 삭제했습니다. 새로고침하면 반영됩니다.")
+        # id 를 외우지 않고, 보기 좋은 라벨로 골라 삭제한다.
+        def _label(row) -> str:
+            parts = [row.date, row.name]
+            if pd.notna(row.weight):
+                parts.append(f"{row.weight:g}kg")
+            if isinstance(row.detail, str) and row.detail:
+                parts.append(f"({row.detail})")
+            return " · ".join(parts[:2]) + (" " + " ".join(parts[2:]) if len(parts) > 2 else "")
+
+        options = {_label(r): r.id for r in df.head(50).itertuples()}
+        pick = st.selectbox("삭제할 기록 선택", list(options.keys()))
+        if st.button("삭제", type="secondary"):
+            db.delete_row("exercise", int(options[pick]))
             st.rerun()

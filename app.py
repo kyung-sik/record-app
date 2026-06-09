@@ -31,8 +31,8 @@ st.subheader("오늘 요약")
 c1, c2, c3 = st.columns(3)
 
 today_ex = ex_df[ex_df["date"] == today]
-today_minutes = int(today_ex["minutes"].fillna(0).sum()) if not today_ex.empty else 0
-c1.metric("오늘 운동 시간", f"{today_minutes} 분", f"{len(today_ex)} 건")
+c1.metric("오늘 운동", f"{len(today_ex)} 종목",
+          ", ".join(today_ex["name"].tolist()) if not today_ex.empty else None)
 
 today_diet = diet_df[diet_df["date"] == today]
 today_cal = int(today_diet["calories"].fillna(0).sum()) if not today_diet.empty else 0
@@ -64,7 +64,10 @@ st.divider()
 st.subheader("최근 기록")
 t1, t2, t3 = st.tabs(["🏃 운동", "🍽️ 식단", "⚖️ 체중"])
 with t1:
-    st.dataframe(ex_df.head(10), use_container_width=True, hide_index=True)
+    ex_show = ex_df[["date", "name", "weight", "detail"]].rename(
+        columns={"date": "날짜", "name": "운동", "weight": "중량(kg)", "detail": "부위"}
+    ) if not ex_df.empty else ex_df
+    st.dataframe(ex_show.head(10), use_container_width=True, hide_index=True)
 with t2:
     st.dataframe(diet_df.head(10), use_container_width=True, hide_index=True)
 with t3:

@@ -24,7 +24,9 @@ from sqlalchemy import (
     create_engine,
     delete,
     insert,
+    inspect,
     select,
+    text,
 )
 from sqlalchemy.engine import Engine
 
@@ -35,10 +37,12 @@ exercise = Table(
     "exercise", metadata,
     Column("id", Integer, primary_key=True),       # 자동 증가 (양쪽 DB 자동 처리)
     Column("date", String, nullable=False),        # YYYY-MM-DD
-    Column("name", String, nullable=False),        # 운동 종류
-    Column("minutes", Integer),                    # 운동 시간(분)
-    Column("sets", Integer),                        # 세트 수
-    Column("memo", String),
+    Column("name", String, nullable=False),        # 운동 종목 (풀업, 벤치프레스, 본운동 ...)
+    Column("weight", Float),                        # 중량(kg) — 중량 기반 종목만
+    Column("detail", String),                       # 부가정보 — 본운동의 부위(가슴/등/어깨/하체)
+    Column("minutes", Integer),                    # (구버전 호환, 미사용)
+    Column("sets", Integer),                         # (구버전 호환, 미사용)
+    Column("memo", String),                          # (구버전 호환, 미사용)
 )
 
 diet = Table(
@@ -94,15 +98,49 @@ def get_engine() -> Engine:
 
 
 def init_db() -> None:
-    """테이블이 없으면 생성한다. 앱 시작 시 호출한다."""
+    """테이블이 없으면 생성하고, 구버전 스키마에 누락된 칼럼을 보충한다."""
     metadata.create_all(get_engine())
+    _migrate()
+
+
+def _migrate() -> None:
+    """이미 만들어진 exercise 테이블에 weight/detail 칼럼이 없으면 추가한다.
+
+    create_all 은 '없는 테이블'만 만들 뿐 '없는 칼럼'은 추가하지 않으므로,
+    구버전 스키마로 배포된 DB(예: Supabase)를 위해 별도로 보정한다.
+    """
+    eng = get_engine()
+    existing = {c["name"] for c in inspect(eng).get_columns("exercise")}
+    add = []
+    if "weight" not in existing:
+        add.append("ALTER TABLE exercise ADD COLUMN weight FLOAT")
+    if "detail" not in existing:
+        add.append("ALTER TABLE exercise ADD COLUMN detail TEXT")
+    if add:
+        with eng.begin() as conn:
+            for stmt in add:
+                conn.execute(text(stmt))
 
 
 # ---------- 입력 ----------
-def add_exercise(date, name, minutes, sets, memo) -> None:
+def add_exercise(date, name, weight=None, detail=None) -> None:
+    """운동 한 종목을 기록한다. weight 는 중량 기반 종목, detail 은 본운동 부위."""
     with get_engine().begin() as conn:
         conn.execute(insert(exercise).values(
-            date=date, name=name, minutes=minutes, sets=sets, memo=memo))
+            date=date, name=name, weight=weight, detail=detail))
+
+
+def get_last_weight(name) -> float | None:
+    """해당 종목을 가장 최근에 기록했을 때의 중량을 반환한다(없으면 None)."""
+    stmt = (
+        select(exercise.c.weight)
+        .where(exercise.c.name == name, exercise.c.weight.isnot(None))
+        .order_by(exercise.c.date.desc(), exercise.c.id.desc())
+        .limit(1)
+    )
+    with get_engine().connect() as conn:
+        row = conn.execute(stmt).first()
+    return float(row[0]) if row and row[0] is not None else None
 
 
 def add_diet(date, meal, food, calories, memo) -> None:
